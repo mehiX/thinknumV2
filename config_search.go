@@ -5,26 +5,17 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/mehiX/thinknumV2/internal/query"
 )
 
 type SearchDefinition struct {
-	Name        string       `json:"name"`
-	Disabled    bool         `json:"disabled"`
-	OutputFile  string       `json:"output"`
-	OutputTypes []string     `json:"output_types"`
-	DatasetID   string       `json:"dataset"`
-	Request     QueryRequest `json:"request"`
-}
-
-type QueryRequest struct {
-	Filters []Filter `json:"filters,omitempty"`
-	Tickers []string `json:"tickers,omitempty"`
-}
-
-type Filter struct {
-	Column string   `json:"column"`
-	Type   string   `json:"type"`
-	Value  []string `json:"value"`
+	Name        string        `json:"name"`
+	Disabled    bool          `json:"disabled"`
+	OutputFile  string        `json:"output"`
+	OutputTypes []string      `json:"output_types"`
+	DatasetID   string        `json:"dataset"`
+	Request     query.Request `json:"request"`
 }
 
 type Timespan struct {
@@ -38,7 +29,7 @@ type Timespan struct {
 func (s SearchDefinition) Clone() SearchDefinition {
 	newS := new(SearchDefinition)
 	*newS = s
-	newS.Request.Filters = make([]Filter, len(s.Request.Filters))
+	newS.Request.Filters = make([]query.Filter, len(s.Request.Filters))
 	for i := range s.Request.Filters {
 		newS.Request.Filters[i] = s.Request.Filters[i]
 	}
@@ -70,12 +61,12 @@ func SearchApplyDatesFilter(srch SearchDefinition, from, to time.Time, interval 
 		ns := srch.Clone()
 
 		ns.Request.Filters = append(ns.Request.Filters,
-			Filter{
+			query.Filter{
 				Column: filterColDateName,
 				Type:   ">=",
 				Value:  []string{span.Start.Format("2006-01-02")},
 			},
-			Filter{
+			query.Filter{
 				Column: filterColDateName,
 				Type:   "<",
 				Value:  []string{span.End.Format("2006-01-02")},

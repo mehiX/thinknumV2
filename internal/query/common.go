@@ -7,6 +7,18 @@ import (
 	"strconv"
 )
 
+type Request struct {
+	Filters     []Filter `json:"filters,omitempty"`
+	Tickers     []string `json:"tickers,omitempty"`
+	Pointintime bool     `json:"pointintime,omitempty"`
+}
+
+type Filter struct {
+	Column string   `json:"column"`
+	Type   string   `json:"type"`
+	Value  []string `json:"value"`
+}
+
 type ResponseMetadata struct {
 	Count       int
 	Total       int
@@ -28,7 +40,8 @@ func addRequestHeaders(r *http.Request, token, version string) {
 	r.Header.Set("X-API-Version", version)
 }
 
-// fetchAll handle pagination. `processResp` is a function that contains the logic for sending the request, receiving the response and persisting the data (usually appending it to a slice)
+// fetchAll handles pagination. `processResp` is a function that contains the logic for sending the request, receiving the response and persisting the data (usually appending it to a slice)
+// Fetch each new page by calling `processResp` and advance to the next page based on the response metadata
 func fetchAll(processResp func(url.Values) (ResponseMetadata, error), params url.Values) error {
 
 	for {

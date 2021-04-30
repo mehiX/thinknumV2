@@ -1,6 +1,10 @@
 package thinknum
 
-import "github.com/mehiX/thinknumV2/internal/query"
+import (
+	"fmt"
+
+	"github.com/mehiX/thinknumV2/internal/query"
+)
 
 type Client struct {
 	Config
@@ -32,4 +36,16 @@ func (c *Client) Datasets(tickerID string) ([]query.DatasetItem, error) {
 
 func (c *Client) Tickers(datasetID string) ([]query.TickerItem, error) {
 	return query.TickerList(c.Hostname, c.Version, c.Token, datasetID)
+}
+
+func (c *Client) RunSearch(srch SearchDefinition) (query.RowsItems, error) {
+
+	fmt.Printf("Running search: %s\n", srch.Name)
+
+	dataset := query.DatasetItem{
+		ID: srch.DatasetID,
+	}
+
+	return dataset.RunSearch(c.Hostname, c.Version, c.Token, c.PageSize, srch.Request)
+
 }
