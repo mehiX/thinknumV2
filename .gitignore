@@ -1,0 +1,7 @@
+# possible configuration files 
+/*.json
+.auth
+
+/thinknumclient
+
+/out
