@@ -17,12 +17,15 @@ const (
 	authURL        = "https://data.thinknum.com/api/authorize"
 )
 
-type auth struct {
+type AuthToken struct {
 	Token   string `json:"auth_token"`
 	Expires string `json:"auth_expires"`
 }
 
-func Token(version, clientID, clientSecret string) (*auth, error) {
+// GetToken Returns an authorization token that can be used for all subsequent requests in this session
+// If a token is present in the local cache and it is still valid then it is returned
+// If there is no cached token or the cached token is expired, then a new token is requested from the authentication server. The obtained token is cached locally before being returned
+func GetToken(version, clientID, clientSecret string) (*AuthToken, error) {
 	token, err := tokenFromFile(secretFilename)
 	if err == nil {
 		if v, err := tokenIsValid(token); v && err == nil {
@@ -47,7 +50,7 @@ func Token(version, clientID, clientSecret string) (*auth, error) {
 	return token, err
 }
 
-func tokenFromURL(version, clientID, clientSecret string) (*auth, error) {
+func tokenFromURL(version, clientID, clientSecret string) (*AuthToken, error) {
 
 	form := make(url.Values)
 	form.Set("version", version)
@@ -64,7 +67,7 @@ func tokenFromURL(version, clientID, clientSecret string) (*auth, error) {
 	}
 	defer resp.Body.Close()
 
-	var a auth
+	var a AuthToken
 	if err := json.NewDecoder(resp.Body).Decode(&a); err != nil {
 		return nil, err
 	}
@@ -73,7 +76,7 @@ func tokenFromURL(version, clientID, clientSecret string) (*auth, error) {
 
 }
 
-func tokenFromFile(fn string) (*auth, error) {
+func tokenFromFile(fn string) (*AuthToken, error) {
 
 	info, err := os.Stat(fn)
 	if err != nil {
@@ -89,7 +92,7 @@ func tokenFromFile(fn string) (*auth, error) {
 		return nil, err
 	}
 
-	var a auth
+	var a AuthToken
 	if err := json.Unmarshal(b, &a); err != nil {
 		return nil, err
 	}
@@ -97,7 +100,7 @@ func tokenFromFile(fn string) (*auth, error) {
 	return &a, nil
 }
 
-func tokenToFile(fn string, t *auth) error {
+func tokenToFile(fn string, t *AuthToken) error {
 
 	f, err := os.OpenFile(fn, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
@@ -108,7 +111,7 @@ func tokenToFile(fn string, t *auth) error {
 	return json.NewEncoder(f).Encode(t)
 }
 
-func tokenIsValid(t *auth) (bool, error) {
+func tokenIsValid(t *AuthToken) (bool, error) {
 
 	exp, err := time.Parse(expiresFMT, t.Expires)
 	if err != nil {

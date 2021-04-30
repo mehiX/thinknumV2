@@ -23,10 +23,17 @@ func main() {
 
 	fmt.Printf("Using configuration from: %s\n", *cfg)
 
-	client, err := thinknum.NewClient(*cfg)
+	conf, err := thinknum.ConfigFromJSON(*cfg)
 	if err != nil {
 		panic(err)
 	}
+
+	tkn, err := thinknum.GetToken(conf.Version, conf.ClientID, conf.ClientSecret)
+	if err != nil {
+		panic(err)
+	}
+
+	client := thinknum.NewClient(conf, tkn)
 
 	tickers, err := client.Tickers(*dataset)
 	if err != nil {

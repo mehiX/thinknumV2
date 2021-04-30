@@ -25,8 +25,8 @@ type Config struct {
 	Searches     []SearchDefinition `json:"searches"`
 }
 
-// FromJSON Loads configuration data from a JSON file
-func FromJSON(fn string) (*Config, error) {
+// ConfigFromJSON Loads configuration data from a JSON file
+func ConfigFromJSON(fn string) (*Config, error) {
 
 	var cfg Config
 

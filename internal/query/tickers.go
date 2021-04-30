@@ -20,7 +20,12 @@ type TickerItem struct {
 	DisplayName string `json:"display_name"`
 }
 
+// TickerList Returns the list of tickers for the provided `datasetID`
 func TickerList(hostname, version, token, datasetID string) ([]TickerItem, error) {
+
+	if datasetID == "" {
+		return nil, fmt.Errorf("dataset not specified when requesting the list of tickers")
+	}
 
 	URL := fmt.Sprintf("https://%s/connections/dataset/%s/tickers", hostname, datasetID)
 

@@ -19,7 +19,7 @@ func main() {
 
 	fmt.Printf("Using configuration from: %s\n", *cfg)
 
-	client, err := thinknum.NewClient(*cfg)
+	client, err := thinknum.NewClientFromJSON(*cfg)
 	if err != nil {
 		log.Fatalln(err)
 	}
