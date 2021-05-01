@@ -13,6 +13,24 @@ type Request struct {
 	Pointintime bool     `json:"pointintime,omitempty"`
 }
 
+func (r Request) Clone() Request {
+	var newR Request
+
+	newR.Filters = make([]Filter, len(r.Filters))
+	for i := range r.Filters {
+		newR.Filters[i] = r.Filters[i]
+	}
+
+	newR.Tickers = make([]string, len(r.Tickers))
+	for i := range r.Tickers {
+		newR.Tickers[i] = r.Tickers[i]
+	}
+
+	newR.Pointintime = r.Pointintime
+
+	return newR
+}
+
 type Filter struct {
 	Column string   `json:"column"`
 	Type   string   `json:"type"`

@@ -29,36 +29,19 @@ type Timespan struct {
 func (s SearchDefinition) Clone() SearchDefinition {
 	newS := new(SearchDefinition)
 	*newS = s
-	newS.Request.Filters = make([]query.Filter, len(s.Request.Filters))
-	for i := range s.Request.Filters {
-		newS.Request.Filters[i] = s.Request.Filters[i]
-	}
-
-	newS.Request.Tickers = make([]string, len(s.Request.Tickers))
-	for i := range s.Request.Tickers {
-		newS.Request.Tickers[i] = s.Request.Tickers[i]
-	}
+	newS.Request = s.Request.Clone()
 
 	return *newS
 }
 
-func ReadSearch(in io.ReadCloser) (SearchDefinition, error) {
-
-	var srch SearchDefinition
-
-	err := json.NewDecoder(in).Decode(&srch)
-
-	return srch, err
-}
-
-func SearchApplyDatesFilter(srch SearchDefinition, from, to time.Time, interval time.Duration) []SearchDefinition {
+func (s SearchDefinition) Split(from, to time.Time, interval time.Duration) []SearchDefinition {
 
 	spans := splitTime(from, to, interval)
 
 	searches := make([]SearchDefinition, len(spans))
 
 	for index, span := range spans {
-		ns := srch.Clone()
+		ns := s.Clone()
 
 		ns.Request.Filters = append(ns.Request.Filters,
 			query.Filter{
@@ -78,6 +61,15 @@ func SearchApplyDatesFilter(srch SearchDefinition, from, to time.Time, interval 
 	}
 
 	return searches
+}
+
+func ReadSearch(in io.Reader) (SearchDefinition, error) {
+
+	var srch SearchDefinition
+
+	err := json.NewDecoder(in).Decode(&srch)
+
+	return srch, err
 }
 
 func splitTime(from, to time.Time, interval time.Duration) []Timespan {

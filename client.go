@@ -19,7 +19,7 @@ func NewClientFromJSON(configFile string) (*Client, error) {
 		return nil, err
 	}
 
-	token, err := GetToken(cfg.Version, cfg.ClientID, cfg.ClientSecret)
+	token, err := GetToken(cfg.ConfigAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +50,7 @@ func (c *Client) Tickers(datasetID string) ([]query.TickerItem, error) {
 	return query.TickerList(c.Hostname, c.Version, c.Token, datasetID)
 }
 
+// RunSearch Perform a search based on a `SearchDefinition`
 func (c *Client) RunSearch(srch SearchDefinition) (query.RowsItems, error) {
 
 	fmt.Printf("Running search: %s\n", srch.Name)

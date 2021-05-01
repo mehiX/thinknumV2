@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	tkn, err := thinknum.GetToken(conf.Version, conf.ClientID, conf.ClientSecret)
+	tkn, err := thinknum.GetToken(conf.ConfigAuth)
 	if err != nil {
 		panic(err)
 	}

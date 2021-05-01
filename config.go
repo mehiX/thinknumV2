@@ -16,13 +16,19 @@ const (
 )
 
 type Config struct {
-	Hostname     string             `json:"hostname"`
-	Version      string             `json:"version"`
-	ClientID     string             `json:"client_id"`
-	ClientSecret string             `json:"client_secret"`
-	Workers      int                `json:"workers"`
-	PageSize     int                `json:"page_size"`
-	Searches     []SearchDefinition `json:"searches"`
+	ConfigAuth
+	Workers  int                `json:"workers"`
+	PageSize int                `json:"page_size"`
+	Searches []SearchDefinition `json:"searches"`
+}
+
+type ConfigAuth struct {
+	Hostname       string `json:"hostname"`
+	Version        string `json:"version"`
+	ClientID       string `json:"client_id"`
+	ClientSecret   string `json:"client_secret"`
+	TokenCachePath string `json:"token_cache_path"`
+	AuthEndpoint   string `json:"auth_endpoint"`
 }
 
 // ConfigFromJSON Loads configuration data from a JSON file
