@@ -63,7 +63,7 @@ func (s SearchDefinition) Split(from, to time.Time, interval time.Duration) []Se
 	return searches
 }
 
-func ReadSearch(in io.Reader) (SearchDefinition, error) {
+func ReadSearchDefinition(in io.Reader) (SearchDefinition, error) {
 
 	var srch SearchDefinition
 
