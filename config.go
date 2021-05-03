@@ -15,6 +15,7 @@ const (
 	filterColDateName = "as_of_date"
 )
 
+// Config Provide a configuration for the client
 type Config struct {
 	ConfigAuth
 	Workers  int                `json:"workers"`
@@ -22,6 +23,8 @@ type Config struct {
 	Searches []SearchDefinition `json:"searches"`
 }
 
+// ConfigAuth Authentication parameters for the client
+// This information is only used to fetch/cache/retrieve a token
 type ConfigAuth struct {
 	Hostname       string `json:"hostname"`
 	Version        string `json:"version"`

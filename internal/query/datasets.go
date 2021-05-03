@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -22,7 +23,7 @@ type DatasetItem struct {
 	Summary     string
 }
 
-func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, srch Request) (RowsItems, error) {
+func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, srch Request) RunResult {
 
 	var items RowsItems
 
@@ -36,19 +37,36 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 
 		addRequestHeadersPOST(req, token, version)
 
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return ResponseMetadata{}, err
+		var resp *http.Response
+		var statusCode int
+
+		for statusCode != http.StatusOK {
+			if statusCode == http.StatusGatewayTimeout {
+				fmt.Printf("%s => request timeout. Retrying...\n", d.DisplayName)
+			}
+
+			resp, err = http.DefaultClient.Do(req)
+			if err != nil {
+				log.Printf("%s => Error: %v\n", d.DisplayName, err)
+				return ResponseMetadata{}, err
+			}
+
+			statusCode = resp.StatusCode
+
+			// in case of timeout we can try again
+			// https://docs.thinknum.com/docs/query-api#http-response-status-code
+			// When you get 504 error, you can keep retrying until data is returned. Every retries will connect to existing queued query and does not start new query.
+			if statusCode != http.StatusOK && statusCode != http.StatusGatewayTimeout {
+				b, _ := ioutil.ReadAll(resp.Body)
+				return ResponseMetadata{}, fmt.Errorf("code: %d, body: %s", resp.StatusCode, string(b))
+			}
+
 		}
+
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			b, _ := ioutil.ReadAll(resp.Body)
-			return ResponseMetadata{}, fmt.Errorf("code: %d, body: %s", resp.StatusCode, string(b))
-		}
-
 		var dsresp DatasetBasicQueryResponse
-		if err := json.NewDecoder(resp.Body).Decode(&dsresp); err != nil {
+		if err = json.NewDecoder(resp.Body).Decode(&dsresp); err != nil {
 			return ResponseMetadata{}, err
 		}
 
@@ -69,7 +87,7 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 	frm := url.Values{}
 	paramsStr, err := json.Marshal(srch)
 	if err != nil {
-		return RowsItems{}, err
+		return RunResult{RowsItems{}, err}
 	}
 	frm["request"] = []string{string(paramsStr)}
 	frm["limit"] = []string{strconv.Itoa(pageSize)}
@@ -77,7 +95,7 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 
 	err = fetchAll(f, frm)
 
-	return items, err
+	return RunResult{items, err}
 }
 
 func Datasets(hostname, version, token string, tickerFilter string) ([]DatasetItem, error) {

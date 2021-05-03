@@ -75,3 +75,10 @@ func fetchAll(processResp func(url.Values) (ResponseMetadata, error), params url
 		params.Set("start", strconv.Itoa(start+resp.Count))
 	}
 }
+
+// RunResult Contains the data returned by a search
+// The results are intended to be passed to the next step in the pipeline: persisting the results
+type RunResult struct {
+	Data  RowsItems
+	Error error
+}

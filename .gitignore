@@ -5,3 +5,7 @@
 /thinknumclient
 
 /out
+
+# vim swap files
+.swp
+**/*.swp
