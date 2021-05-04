@@ -7,16 +7,18 @@ import (
 	"net/http"
 )
 
+// TickerResponse JSON response when querying for the list of Tickers
 type TickerResponse struct {
 	ResponseMetadata
 	Items []TickerItem
 }
 
+// TickerItem One item in the returned list of Tickers
 type TickerItem struct {
-	ID          string
-	Sector      string
-	Country     string
-	Industry    string
+	ID          string `json:"id"`
+	Sector      string `json:"sector"`
+	Country     string `json:"country"`
+	Industry    string `json:"industry"`
 	DisplayName string `json:"display_name"`
 }
 

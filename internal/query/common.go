@@ -7,12 +7,14 @@ import (
 	"strconv"
 )
 
+// Request A request deinition as defined by the Thinknum API Docs
 type Request struct {
 	Filters     []Filter `json:"filters,omitempty"`
 	Tickers     []string `json:"tickers,omitempty"`
 	Pointintime bool     `json:"pointintime,omitempty"`
 }
 
+// Clone Returns a copy of the original Request. This makes sure that also the internal slices are properly duplicated to a new memory address
 func (r Request) Clone() Request {
 	var newR Request
 
@@ -31,17 +33,21 @@ func (r Request) Clone() Request {
 	return newR
 }
 
+// Filter A single filter used to filter data from a dataset
 type Filter struct {
 	Column string   `json:"column"`
 	Type   string   `json:"type"`
 	Value  []string `json:"value"`
 }
 
+// ResponseMetadata Metadata returned with the response
 type ResponseMetadata struct {
-	Count       int
-	Total       int
-	Status      int
-	Summary     string
+	// Number of records returned. If less than the specified limit (page size) then no more records
+	Count int `json:"count"`
+	// Total number of records that can be retrieved for this search
+	Total       int    `json:"total"`
+	Status      int    `json:"status"`
+	Summary     string `json:"summary"`
 	ID          string `json:"id"`
 	DisplayName string `json:"display_name"`
 }

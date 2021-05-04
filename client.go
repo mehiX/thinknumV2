@@ -6,6 +6,7 @@ import (
 	"github.com/mehiX/thinknumV2/internal/query"
 )
 
+// Client A Thinknum client should implement the `Client` interface
 type Client interface {
 	Datasets(string) ([]query.DatasetItem, error)
 	Tickers(string) ([]query.TickerItem, error)
@@ -13,6 +14,7 @@ type Client interface {
 	RunAll() <-chan SearchResult
 }
 
+// SearchResult Brings together the search definition and the search results
 type SearchResult struct {
 	query.RunResult
 	Search SearchDefinition

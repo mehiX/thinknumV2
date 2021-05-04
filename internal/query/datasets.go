@@ -11,11 +11,13 @@ import (
 	"strings"
 )
 
+// DatasetResponse The json response when querying for the list of datasets
 type DatasetResponse struct {
 	ResponseMetadata
 	Items []DatasetItem
 }
 
+// DatasetItem Represents the data returned for a single Dataset when querying for the list of all datasets
 type DatasetItem struct {
 	State       string
 	DisplayName string `json:"display_name"`
@@ -23,6 +25,8 @@ type DatasetItem struct {
 	Summary     string
 }
 
+// RunSearch Run a query in the current dataset based on the passed in `Request` definiton
+// `pageSize` defines the limit on the records to be returned
 func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, srch Request) RunResult {
 
 	var items RowsItems
@@ -39,6 +43,7 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 
 		var resp *http.Response
 		var statusCode int
+		var errCount, maxErrCount = 0, 3
 
 		for statusCode != http.StatusOK {
 			if statusCode == http.StatusGatewayTimeout {
@@ -47,8 +52,13 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 
 			resp, err = http.DefaultClient.Do(req)
 			if err != nil {
-				log.Printf("%s => Error: %v\n", d.DisplayName, err)
-				return ResponseMetadata{}, err
+				// allow maxErrCount retries on error, after which abort
+				if errCount >= maxErrCount {
+					log.Printf("%s => Error: %v\n", d.DisplayName, err)
+					return ResponseMetadata{}, err
+				}
+
+				errCount++
 			}
 
 			statusCode = resp.StatusCode
@@ -65,7 +75,7 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 
 		defer resp.Body.Close()
 
-		var dsresp DatasetBasicQueryResponse
+		var dsresp datasetBasicQueryResponse
 		if err = json.NewDecoder(resp.Body).Decode(&dsresp); err != nil {
 			return ResponseMetadata{}, err
 		}
@@ -98,6 +108,7 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 	return RunResult{items, err}
 }
 
+// Datasets Query the list of datasets
 func Datasets(hostname, version, token string, tickerFilter string) ([]DatasetItem, error) {
 
 	URL := fmt.Sprintf("https://%s/connections/datasets", hostname)
@@ -129,18 +140,24 @@ func Datasets(hostname, version, token string, tickerFilter string) ([]DatasetIt
 
 }
 
-type DatasetBasicQueryResponse struct {
+type datasetBasicQueryResponse struct {
 	ResponseMetadata
 	Items RowsItems
 }
 
+// RowsItems Query results as returned by the Thinknum API
 type RowsItems struct {
 	RowItemsMetadata
+	// Metadata for the returned columns
 	Fields []interface{}
-	Rows   []interface{}
+	// Rows of effective data
+	Rows []interface{}
 }
 
+// RowItemsMetadata Metadata for returned rows
 type RowItemsMetadata struct {
 	Total int
+	// The number of requests made to retrieve all the results.
+	// The actual value depends on the pageSize ('limit') set through configuration
 	Pages int
 }

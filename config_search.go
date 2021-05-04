@@ -9,16 +9,23 @@ import (
 	"github.com/mehiX/thinknumV2/internal/query"
 )
 
+// SearchDefinition Defines the parameters of a search.
 type SearchDefinition struct {
-	Name        string        `json:"name"`
-	Disabled    bool          `json:"disabled"`
-	OutputFile  string        `json:"output"`
-	OutputTypes []string      `json:"output_types"`
-	DatasetID   string        `json:"dataset"`
-	Request     query.Request `json:"request"`
+	Name string `json:"name"`
+	// Set this to true to ignore this search definition
+	Disabled bool `json:"disabled"`
+	// Path to a file where the results will be written
+	// Since multiple formats are supported, this parameter should not have a type suffix.
+	// The suffix will be added when the file is created
+	OutputFile string `json:"output"`
+	// Supported types: `json`, `csv`. Anything else will simply be ignored
+	OutputTypes []string `json:"output_types"`
+	DatasetID   string   `json:"dataset"`
+	// A request object as defined by the Thinknum API Docs
+	Request query.Request `json:"request"`
 }
 
-type Timespan struct {
+type timespan struct {
 	Start time.Time
 	End   time.Time
 }
@@ -34,6 +41,9 @@ func (s SearchDefinition) Clone() SearchDefinition {
 	return *newS
 }
 
+// Split Split the current search definition into smaller time frames.
+// It returns an array of search definitions, each having the same citeria as the original definition, plus a constraint on start and end time.
+// The `interval` parameter is of time.Duration, therefor the largest avaialable time unit is `h` (hour). So to specify a week you should translate that in hours: 7 * 24h
 func (s SearchDefinition) Split(from, to time.Time, interval time.Duration) []SearchDefinition {
 
 	spans := splitTime(from, to, interval)
@@ -63,6 +73,8 @@ func (s SearchDefinition) Split(from, to time.Time, interval time.Duration) []Se
 	return searches
 }
 
+// ReadSearchDefinition Reads a JSON object representing a SearchDefinition from an io.Reader.
+// Returns a SearchDefinition or a decoding error if any
 func ReadSearchDefinition(in io.Reader) (SearchDefinition, error) {
 
 	var srch SearchDefinition
@@ -72,15 +84,15 @@ func ReadSearchDefinition(in io.Reader) (SearchDefinition, error) {
 	return srch, err
 }
 
-func splitTime(from, to time.Time, interval time.Duration) []Timespan {
-	s := make([]Timespan, 0)
+func splitTime(from, to time.Time, interval time.Duration) []timespan {
+	s := make([]timespan, 0)
 
 	var f1 time.Time
 
 	for f1 = from; f1.Add(interval).Before(to); f1 = f1.Add(interval) {
-		s = append(s, Timespan{f1, f1.Add(interval)})
+		s = append(s, timespan{f1, f1.Add(interval)})
 	}
 
-	return append(s, Timespan{f1, to})
+	return append(s, timespan{f1, to})
 
 }
