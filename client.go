@@ -12,12 +12,22 @@ type Client interface {
 	Tickers(string) ([]query.TickerItem, error)
 	RunSearch(SearchDefinition) query.RunResult
 	RunAll() <-chan SearchResult
+	SaveSearchResult(SearchResult) []SaveResult
 }
 
 // SearchResult Brings together the search definition and the search results
 type SearchResult struct {
 	query.RunResult
 	Search SearchDefinition
+}
+
+// SaveResult The result of a save results operation. The Error will be not nil if there was an error during the process
+// For the same search there will be one SaveResult per specified OutputType
+type SaveResult struct {
+	Search SearchDefinition
+	// As specified by the OutputType in the search definition
+	Type  string
+	Error error
 }
 
 type client struct {
@@ -90,4 +100,23 @@ func (c *client) RunAll() <-chan SearchResult {
 	}()
 
 	return resultsStream
+}
+
+func (c *client) SaveSearchResult(sr SearchResult) []SaveResult {
+
+	out := make(chan SaveResult)
+	results := make([]SaveResult, 0)
+
+	for _, t := range sr.Search.OutputTypes {
+		go func(t string) {
+			out <- writeToFile(sr, t)
+		}(t)
+	}
+
+	for range sr.Search.OutputTypes {
+		result := <-out
+		results = append(results, result)
+	}
+
+	return results
 }

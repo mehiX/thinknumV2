@@ -46,19 +46,20 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 		var errCount, maxErrCount = 0, 3
 
 		for statusCode != http.StatusOK {
-			if statusCode == http.StatusGatewayTimeout {
-				fmt.Printf("%s => request timeout. Retrying...\n", d.DisplayName)
-			}
 
 			resp, err = http.DefaultClient.Do(req)
 			if err != nil {
 				// allow maxErrCount retries on error, after which abort
+				log.Printf("Error: %v\n", err)
 				if errCount >= maxErrCount {
-					log.Printf("%s => Error: %v\n", d.DisplayName, err)
 					return ResponseMetadata{}, err
 				}
 
 				errCount++
+
+				fmt.Printf("Retry (%d/%d)...\n", errCount, maxErrCount)
+
+				continue
 			}
 
 			statusCode = resp.StatusCode
@@ -71,6 +72,9 @@ func (d DatasetItem) RunSearch(hostname, version, token string, pageSize int, sr
 				return ResponseMetadata{}, fmt.Errorf("code: %d, body: %s", resp.StatusCode, string(b))
 			}
 
+			if statusCode == http.StatusGatewayTimeout {
+				fmt.Printf("%s => request timeout. Retrying...\n", d.DisplayName)
+			}
 		}
 
 		defer resp.Body.Close()
@@ -149,10 +153,25 @@ type datasetBasicQueryResponse struct {
 type RowsItems struct {
 	RowItemsMetadata
 	// Metadata for the returned columns
-	Fields []interface{}
+	Fields []Field
 	// Rows of effective data
-	Rows []interface{}
+	Rows []Row
 }
+
+// Field Metadata for one column of the results
+type Field struct {
+	DisplayName string   `json:"display_name"`
+	Format      string   `json:"format"`
+	Metric      bool     `json:"metric"`
+	ID          string   `json:"id"`
+	Length      int      `json:"length"`
+	Summary     string   `json:"summary"`
+	Type        string   `json:"type"`
+	Options     []string `json:"options"`
+}
+
+// Row One row of data
+type Row []interface{}
 
 // RowItemsMetadata Metadata for returned rows
 type RowItemsMetadata struct {
