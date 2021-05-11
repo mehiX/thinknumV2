@@ -16,11 +16,24 @@ Performs a search based on a config file.
 
 If you specified an output folder in `config.json` make sure to create it first with something like `make -p ./out`
 
+Build the binary
+
 ```bash
 go get -d -v ./...
 go build -ldflags="-X 'main.buildTime=$(date)' -X 'main.commitID=$(git rev-parse HEAD)'" ./cmd/thinknumclient
+```
 
-./thinknumclient -config config.json
+Run it with configuration in `config.json`
+
+```bash
+# By default is looks for a configuration file called config.json in the current directory
+./thinknumclient
+```
+
+or using a different configuration file
+
+```bash
+./thinknumclient -c myconfig.json
 ```
 
 ### SplitSearch
